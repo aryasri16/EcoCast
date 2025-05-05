@@ -81,7 +81,7 @@ source .venv/bin/activate
 # Install backend dependencies
 cd backend/app
 pip install -r requirements.txt
-cd ../..
+cd ./...
 
 # Run data preparation (only needed once)
 python backend/scripts/build_medians.py

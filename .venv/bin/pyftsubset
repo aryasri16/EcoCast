@@ -1,4 +1,4 @@
-#!/Users/manmohan/Documents/Final_Project_ML/.venv/bin/python
+#!/Users/manmohan/Documents/EcoCast/.venv/bin/python
 # -*- coding: utf-8 -*-
 import re
 import sys

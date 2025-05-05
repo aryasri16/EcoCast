@@ -8,7 +8,14 @@ import "./index.css";
 // Configure axios to always connect to the backend
 axios.defaults.baseURL = "http://localhost:8000";
 
+// Configure React Query
 const qc = new QueryClient();
+
+// Log that the application is starting
+console.log("[main] Initializing application - basic version");
+
 ReactDOM.createRoot(document.getElementById("root")!).render(
-  <QueryClientProvider client={qc}><App /></QueryClientProvider>
+  <QueryClientProvider client={qc}>
+    <App />
+  </QueryClientProvider>
 );
