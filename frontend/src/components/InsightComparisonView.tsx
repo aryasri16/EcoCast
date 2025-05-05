@@ -752,7 +752,7 @@ const InsightComparisonView: React.FC = () => {
                   ? (d.isSelected ? colorScale(d.iso3) : 'rgba(255,255,255,0.2)')
                   : colorScale(d.iso3)
                 }
-                sizeAccessor={(d) => showGlobalContext ? (d.isSelected ? 8 : 4) : 8}
+                sizeAccessor={(d) => showGlobalContext ? (d.isSelected ? 12 : 5) : 12}
               />
               
               {/* Annotations for selected countries */}
@@ -912,9 +912,12 @@ const InsightComparisonView: React.FC = () => {
     // Land Pressure visualization (scatter with 45° reference line)
     if (question === 'land_pressure') {
       return (
-        <div className="bg-zinc-800 p-4 rounded-md">
+        <div className="bg-zinc-800 p-6 rounded-md my-4 border border-zinc-700">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-white text-lg font-medium">Built-up Land Growth vs. Population Growth</h2>
+            <div>
+              <h2 className="text-white text-xl font-bold">Land-Use Pressure Hotspots</h2>
+              <p className="text-zinc-400 text-sm mt-1">Built-up land expanding faster than population flags sprawl-driven ecological stress</p>
+            </div>
             <div className="flex items-center">
               <button
                 onClick={() => setShowGlobalContext(!showGlobalContext)}
@@ -929,9 +932,9 @@ const InsightComparisonView: React.FC = () => {
             </div>
           </div>
           
-          <div className="h-96">
+          <div className="h-[600px]">
             <XYChart
-              height={350}
+              height={550}
               xScale={{ 
                 type: 'linear', 
                 domain: [
@@ -946,7 +949,7 @@ const InsightComparisonView: React.FC = () => {
                   Math.max(...filteredData.map(d => d.g_built)) * 1.1
                 ]
               }}
-              margin={{ top: 20, right: 40, bottom: 50, left: 60 }}
+              margin={{ top: 30, right: 50, bottom: 60, left: 80 }}
             >
               <AnimatedGrid columns={false} numTicks={5} />
               <AnimatedAxis 
@@ -955,16 +958,17 @@ const InsightComparisonView: React.FC = () => {
                 labelOffset={40}
                 labelProps={{
                   fill: 'white',
-                  fontSize: 12,
+                  fontSize: 14,
                   textAnchor: 'middle',
+                  fontWeight: 'bold'
                 }}
                 tickLabelProps={() => ({
                   fill: 'white',
-                  fontSize: 10,
+                  fontSize: 12,
                   textAnchor: 'middle',
                 })}
                 numTicks={5}
-                tickFormat={(v) => `${format('.0%')(v)}`}
+                tickFormat={(v) => `${(v * 100).toFixed(0)}%`}
               />
               <AnimatedAxis 
                 orientation="left" 
@@ -972,16 +976,17 @@ const InsightComparisonView: React.FC = () => {
                 labelOffset={50}
                 labelProps={{
                   fill: 'white',
-                  fontSize: 12,
+                  fontSize: 14,
                   textAnchor: 'middle',
+                  fontWeight: 'bold'
                 }}
                 tickLabelProps={() => ({
                   fill: 'white',
-                  fontSize: 10,
+                  fontSize: 12,
                   textAnchor: 'end',
                 })}
                 numTicks={5}
-                tickFormat={(v) => `${format('.0%')(v)}`}
+                tickFormat={(v) => `${(v * 100).toFixed(0)}%`}
               />
               
               {/* 45° reference line */}
@@ -997,39 +1002,73 @@ const InsightComparisonView: React.FC = () => {
                     Math.max(...filteredData.map(d => d.g_pop)) * 1.1,
                     Math.max(...filteredData.map(d => d.g_built)) * 1.1
                   )}
-                  stroke="#666"
-                  strokeWidth={1}
-                  strokeDasharray="4,4"
+                  stroke="#ffffff"
+                  strokeWidth={1.5}
+                  strokeDasharray="6,4"
                 />
                 <text
-                  x={Math.max(...filteredData.map(d => d.g_pop)) * 0.5}
-                  y={Math.max(...filteredData.map(d => d.g_pop)) * 0.5 - 10}
+                  x={Math.max(...filteredData.map(d => d.g_pop)) * 0.65}
+                  y={Math.max(...filteredData.map(d => d.g_pop)) * 0.65 - 10}
                   fill="white"
-                  fontSize={10}
+                  fontSize={12}
+                  fontWeight="medium"
                   textAnchor="middle"
                 >
-                  1:1 ratio line
+                  Reference line (equal growth)
+                </text>
+                <text
+                  x={Math.max(...filteredData.map(d => d.g_pop)) * 0.8}
+                  y={Math.max(...filteredData.map(d => d.g_pop)) * 0.3 - 10}
+                  fill="#10b981"
+                  fontSize={10}
+                  fontWeight="medium"
+                  textAnchor="middle"
+                >
+                  Sustainable zone
+                </text>
+                <text
+                  x={Math.max(...filteredData.map(d => d.g_pop)) * 0.3}
+                  y={Math.max(...filteredData.map(d => d.g_pop)) * 0.8 - 10}
+                  fill="#ef4444"
+                  fontSize={14}
+                  fontWeight="bold"
+                  textAnchor="middle"
+                >
+                  Hotspot zone
                 </text>
               </Group>
               
-              {/* Reference area for urban sprawl */}
+              {/* Danger zone shading - everything above the 45° line */}
               <Group>
-                <rect
-                  x={Math.min(0, Math.min(...filteredData.map(d => d.g_pop)) * 1.1)}
-                  y={Math.min(0, Math.min(...filteredData.map(d => d.g_pop)) * 1.1)}
-                  width={Math.max(...filteredData.map(d => d.g_pop)) * 1.1 - Math.min(0, Math.min(...filteredData.map(d => d.g_pop)) * 1.1)}
-                  height={Math.max(...filteredData.map(d => d.g_built)) * 1.1 - Math.min(0, Math.min(...filteredData.map(d => d.g_pop)) * 1.1)}
-                  fill="#f97316"
-                  fillOpacity={0.1}
+                {/* Create a triangle that covers the area where g_built > g_pop */}
+                <path
+                  d={`
+                    M ${Math.min(0, Math.min(...filteredData.map(d => d.g_pop)) * 1.1)} ${Math.min(0, Math.min(...filteredData.map(d => d.g_pop)) * 1.1)}
+                    L ${Math.max(...filteredData.map(d => Math.max(d.g_pop, d.g_built))) * 1.1} ${Math.min(0, Math.min(...filteredData.map(d => d.g_pop)) * 1.1)} 
+                    L ${Math.min(0, Math.min(...filteredData.map(d => d.g_pop)) * 1.1)} ${Math.max(...filteredData.map(d => Math.max(d.g_pop, d.g_built))) * 1.1}
+                    Z
+                  `}
+                  fill="#ef4444"
+                  fillOpacity={0.15}
                 />
                 <text
-                  x={(Math.min(0, Math.min(...filteredData.map(d => d.g_pop)) * 1.1) + Math.max(...filteredData.map(d => d.g_pop)) * 1.1) / 2}
-                  y={(Math.min(0, Math.min(...filteredData.map(d => d.g_pop)) * 1.1) + Math.max(...filteredData.map(d => d.g_built)) * 1.1) / 2}
-                  fill="white"
-                  fontSize={10}
+                  x={Math.max(...filteredData.map(d => d.g_pop)) * 0.25}
+                  y={Math.max(...filteredData.map(d => d.g_built)) * 0.4}
+                  fill="#ef4444"
+                  fontSize={16}
+                  fontWeight="bold"
                   textAnchor="middle"
                 >
-                  Urban sprawl zone
+                  Hotspot zone
+                </text>
+                <text
+                  x={Math.max(...filteredData.map(d => d.g_pop)) * 0.25}
+                  y={Math.max(...filteredData.map(d => d.g_built)) * 0.4 + 24}
+                  fill="#ef4444"
+                  fontSize={12}
+                  textAnchor="middle"
+                >
+                  Built-up land growing faster than population
                 </text>
               </Group>
               
@@ -1043,7 +1082,7 @@ const InsightComparisonView: React.FC = () => {
                   ? (d.isSelected ? colorScale(d.iso3) : 'rgba(255,255,255,0.2)')
                   : colorScale(d.iso3)
                 }
-                sizeAccessor={(d) => showGlobalContext ? (d.isSelected ? 8 : 4) : 8}
+                sizeAccessor={(d) => showGlobalContext ? (d.isSelected ? 12 : 5) : 12}
               />
               
               {/* Annotations for selected countries */}
@@ -1087,10 +1126,10 @@ const InsightComparisonView: React.FC = () => {
                         {countryNames[datum.iso3] || datum.iso3}
                       </div>
                       <div className="text-zinc-300 text-sm mt-1">
-                        Population growth: {format('.1%')(datum.g_pop)}
+                        Population growth: {(datum.g_pop * 100).toFixed(1)}%
                       </div>
                       <div className="text-zinc-300 text-sm">
-                        Built-up land growth: {format('.1%')(datum.g_built)}
+                        Built-up land growth: {(datum.g_built * 100).toFixed(1)}%
                       </div>
                       <div className="text-zinc-300 text-sm">
                         Built-up land: {datum.built_up_land_EFProdPerCap.toFixed(3)} ha per capita
@@ -1099,8 +1138,8 @@ const InsightComparisonView: React.FC = () => {
                         Population: {format('.3s')(datum.population)}
                       </div>
                       {datum.g_built > datum.g_pop && (
-                        <div className="text-orange-400 text-sm mt-1">
-                          ⚠️ Urban sprawl (built-up land growing faster than population)
+                        <div className="text-red-400 text-sm mt-1 font-medium">
+                          ⚠️ Hotspot: Built-up land growing {((datum.g_built / datum.g_pop) * 100 - 100).toFixed(0)}% faster than population
                         </div>
                       )}
                     </div>
@@ -1110,12 +1149,25 @@ const InsightComparisonView: React.FC = () => {
             </XYChart>
           </div>
           
-          <div className="mt-4 text-zinc-400 text-sm">
-            <p>This chart shows the relationship between population growth and built-up land growth. 
-               Points above the diagonal line represent countries where built-up land is expanding faster than population, 
-               indicating urban sprawl or inefficient land use.</p>
-            <p className="mt-2">Countries in the orange-tinted area are experiencing land-use pressure where 
-               urbanization is occurring at a faster rate than population growth would suggest is necessary.</p>
+          <div className="mt-6 bg-zinc-900 p-6 rounded-md border border-zinc-700">
+            <h3 className="text-white font-semibold mb-3 text-lg">Land-Use Pressure Hotspots</h3>
+            <p className="text-zinc-300 text-sm mb-3">
+              This chart reveals unsustainable land development patterns by comparing population growth with the expansion of built-up land. 
+              Points above the diagonal reference line represent "hotspots" where built-up land is expanding faster than population, 
+              indicating urban sprawl, inefficient development, or ecological stress.
+            </p>
+            <p className="text-zinc-300 text-sm mb-3">
+              The red-shaded area highlights these hotspot regions where land development exceeds what population growth alone would require.
+              This pattern often signals:
+            </p>
+            <ul className="text-zinc-300 text-sm list-disc pl-6 mb-3">
+              <li className="mb-1">Suburban sprawl and inefficient land use patterns</li>
+              <li className="mb-1">Conversion of natural habitats to built environments</li>
+              <li>Potentially unsustainable development that threatens biodiversity</li>
+            </ul>
+            <p className="text-zinc-300 text-sm">
+              Countries with high hotspot ratios should evaluate their land-use policies and urban planning approaches to avoid further ecological pressure.
+            </p>
           </div>
         </div>
       );
