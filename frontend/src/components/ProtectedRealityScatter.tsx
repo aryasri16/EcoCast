@@ -82,46 +82,86 @@ const ProtectedRealityScatter: React.FC<ProtectedRealityScatterProps> = ({
 
   return (
     <div className="h-full w-full overflow-x-auto">
+      {/* Title at the top of the chart */}
+      <div className="text-white font-bold text-xl text-center mb-2">
+        Protected Areas vs. Forest Biocapacity Change
+      </div>
+      
       <XYChart
-        height={400}
-        width={600}
-        margin={{ top: 20, right: 40, bottom: 60, left: 60 }}
+        height={500}
+        width={800}
+        margin={{ top: 50, right: 60, bottom: 100, left: 90 }}
         xScale={{ type: 'linear', domain: xDomain }}
         yScale={{ type: 'linear', domain: yDomain }}
       >
-        <AnimatedGrid columns={false} numTicks={5} />
+        <AnimatedGrid columns={false} numTicks={5} stroke="#666" opacity={0.3} />
+        
+        {/* X-axis with improved visibility - manually position label */}
         <AnimatedAxis 
           orientation="bottom" 
-          label="Protected Land Area (%)"
-          labelOffset={40}
-          labelProps={{
-            fill: 'white',
-            fontSize: 12,
-            textAnchor: 'middle',
-          }}
+          label="" // Empty label, we'll add our own
+          labelOffset={60}
           tickLabelProps={() => ({
             fill: 'white',
-            fontSize: 10,
+            fontSize: 14,
             textAnchor: 'middle',
+            dy: '0.5em',
           })}
-          numTicks={5}
+          numTicks={7}
+          stroke="white"
+          tickStroke="white"
         />
+        
+        {/* Manual X-axis label without background */}
+        <Group>
+          <text
+            x={400}
+            y={450}
+            fill="#ffffff"
+            fontSize={16}
+            fontWeight="bold"
+            textAnchor="middle"
+            style={{
+              textShadow: '0px 0px 4px #000000, 0px 0px 8px #000000'
+            }}
+          >
+            Protected Land Area (% of terrestrial area)
+          </text>
+        </Group>
+        
+        {/* Y-axis with improved visibility */}
         <AnimatedAxis 
           orientation="left" 
-          label="Forest Land Change (gha per capita)" 
-          labelOffset={50}
-          labelProps={{
-            fill: 'white',
-            fontSize: 12,
-            textAnchor: 'middle',
-          }}
+          label="" // Empty label, we'll add our own
+          labelOffset={70}
           tickLabelProps={() => ({
             fill: 'white',
-            fontSize: 10,
+            fontSize: 14,
             textAnchor: 'end',
+            dx: '-0.5em',
           })}
-          numTicks={5}
+          numTicks={7}
+          stroke="white"
+          tickStroke="white"
         />
+        
+        {/* Manual Y-axis label without background */}
+        <Group>
+          <text
+            transform="rotate(-90)"
+            x={-250} // y-center of chart
+            y={25}
+            fill="#ffffff"
+            fontSize={16}
+            fontWeight="bold"
+            textAnchor="middle"
+            style={{
+              textShadow: '0px 0px 4px #000000, 0px 0px 8px #000000'
+            }}
+          >
+            Forest Biocapacity Change (gha per capita)
+          </text>
+        </Group>
         
         {/* Draw shaded red rect in the lower-right quadrant (x >= 15 && y < 0) */}
         <Group>
@@ -131,52 +171,82 @@ const ProtectedRealityScatter: React.FC<ProtectedRealityScatterProps> = ({
             width={xDomain[1] - 15} // Extend to right edge of chart
             height={Math.abs(0 - yDomain[0])} // Height up to y=0
             fill="#ef4444" // red-500
-            fillOpacity={0.1}
+            fillOpacity={0.15}
             stroke="#ef4444"
-            strokeOpacity={0.3}
-            strokeWidth={1}
+            strokeOpacity={0.5}
+            strokeWidth={2}
           />
           <text
             x={(15 + xDomain[1]) / 2}
             y={yDomain[0] / 2}
-            fill="white"
-            fontSize={10}
+            fill="#ef4444" /* red-500 */
+            fontSize={18}
             fontWeight="bold"
             textAnchor="middle"
+            style={{
+              textShadow: '0px 0px 4px #000000, 0px 0px 8px #000000',
+              paintOrder: 'stroke',
+              stroke: 'rgba(0,0,0,0.8)',
+              strokeWidth: 3
+            }}
           >
             "Paper parks" zone
           </text>
         </Group>
         
-        {/* Reference line at y=0 */}
+        {/* Reference line at y=0 with improved visibility */}
         <Group>
           <line
             x1={0}
             x2={xDomain[1]}
             y1={0}
             y2={0}
-            stroke="#94a3b8"
+            stroke="white"
             strokeDasharray="4,4"
+            strokeWidth={2}
           />
+          <text
+            x={10}
+            y={-12}
+            fill="#4ade80" /* green-400 */
+            fontSize={14}
+            fontWeight="bold"
+            textAnchor="start"
+            style={{
+              textShadow: '0px 0px 4px #000000, 0px 0px 8px #000000',
+              paintOrder: 'stroke',
+              stroke: '#000000',
+              strokeWidth: 3
+            }}
+          >
+            No forest change
+          </text>
         </Group>
         
-        {/* Reference line at x=15 */}
+        {/* Reference line at x=15 with improved visibility */}
         <Group>
           <line
             x1={15}
             x2={15}
             y1={yDomain[0]}
             y2={yDomain[1]}
-            stroke="#94a3b8"
+            stroke="white"
             strokeDasharray="4,4"
+            strokeWidth={2}
           />
           <text
-            x={15 + 2}
-            y={yDomain[1] - 5}
-            fill="#94a3b8"
-            fontSize={10}
+            x={15 + 10}
+            y={yDomain[1] - 12}
+            fill="#fbbf24" /* amber-400 */
+            fontSize={14}
+            fontWeight="bold"
             textAnchor="start"
-            alignmentBaseline="hanging"
+            style={{
+              textShadow: '0px 0px 4px #000000, 0px 0px 8px #000000',
+              paintOrder: 'stroke',
+              stroke: '#000000',
+              strokeWidth: 3
+            }}
           >
             15% protection threshold
           </text>
@@ -190,7 +260,7 @@ const ProtectedRealityScatter: React.FC<ProtectedRealityScatterProps> = ({
             xAccessor={(d) => d.protected_pct}
             yAccessor={(d) => d.delta_forest}
             colorAccessor={getColor}
-            size={4}
+            size={6}
           />
         )}
         
@@ -201,7 +271,7 @@ const ProtectedRealityScatter: React.FC<ProtectedRealityScatterProps> = ({
           xAccessor={(d) => d.protected_pct}
           yAccessor={(d) => d.delta_forest}
           colorAccessor={getColor}
-          size={8}
+          size={12}
           onPointerUp={(d) => onDotClick(d.iso3)}
         />
         
@@ -213,14 +283,15 @@ const ProtectedRealityScatter: React.FC<ProtectedRealityScatterProps> = ({
               key={`annotation-${country.iso3}`}
               dataKey={`${country.iso3}-label`}
               datum={{ x: country.protected_pct, y: country.delta_forest }}
-              dx={10}
-              dy={-10}
+              dx={15}
+              dy={-15}
             >
               <text
-                fontSize={10}
+                fontSize={14}
                 fontWeight="bold"
                 fill="#3b82f6"
                 textAnchor="start"
+                style={{ textShadow: '0 0 5px rgba(0,0,0,0.7)' }}
               >
                 {country.iso3}
               </text>
@@ -241,19 +312,19 @@ const ProtectedRealityScatter: React.FC<ProtectedRealityScatterProps> = ({
             const emoji = isForestLoss ? '🔻' : '🔺';
             
             return (
-              <div className="bg-zinc-900 p-3 rounded-lg shadow-xl border border-zinc-700">
-                <div className="text-white font-bold">{datum.iso3}</div>
-                <div className="text-zinc-300 text-sm mt-1">
-                  Protected: {datum.protected_pct.toFixed(1)}%
+              <div className="bg-zinc-900 p-4 rounded-lg shadow-xl border border-zinc-700">
+                <div className="text-white font-bold text-lg mb-1">{datum.iso3}</div>
+                <div className="text-zinc-300 text-md mt-1">
+                  Protected: <span className="font-semibold text-white">{datum.protected_pct.toFixed(1)}%</span>
                 </div>
-                <div className="text-zinc-300 text-sm">
-                  Δ Forest: {datum.delta_forest.toFixed(3)} gha ppc {emoji}
+                <div className="text-zinc-300 text-md">
+                  Δ Forest: <span className="font-semibold text-white">{datum.delta_forest.toFixed(3)}</span> gha ppc {emoji}
                 </div>
-                <div className="text-zinc-300 text-sm">
-                  Current forest: {datum.forest_land_BiocapPerCap.toFixed(3)} gha ppc
+                <div className="text-zinc-300 text-md">
+                  Current forest: <span className="font-semibold text-white">{datum.forest_land_BiocapPerCap.toFixed(3)}</span> gha ppc
                 </div>
                 {datum.protected_pct >= 15 && datum.delta_forest < 0 && (
-                  <div className="text-red-400 text-sm mt-1 font-medium">
+                  <div className="text-red-400 text-md mt-2 font-medium">
                     ⚠️ Protection not preventing forest loss
                   </div>
                 )}

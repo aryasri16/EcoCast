@@ -827,13 +827,13 @@ const InsightComparisonView: React.FC = () => {
     // Protected Area Reality Test visualization (scatter plot)
     if (question === 'protected_area_reality') {
       return (
-        <div className="bg-zinc-800 p-4 rounded-md">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-white text-lg font-medium">Protected Area Percentage vs. Forest Change</h2>
+        <div className="bg-zinc-800 p-6 rounded-md">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-white text-2xl font-bold">Protected Area Percentage vs. Forest Change</h2>
             <div className="flex items-center">
               <button
                 onClick={() => setShowGlobalContext(!showGlobalContext)}
-                className={`px-3 py-1 rounded-md text-sm ${
+                className={`px-4 py-2 rounded-md text-md font-medium ${
                   showGlobalContext 
                     ? 'bg-blue-600 text-white' 
                     : 'bg-zinc-700 text-zinc-300 hover:bg-zinc-600'
@@ -845,8 +845,8 @@ const InsightComparisonView: React.FC = () => {
           </div>
           
           {filteredData.length > 0 ? (
-            <div className="overflow-x-auto">
-              <div className="h-96 min-w-[350px]">
+            <div className="overflow-x-auto bg-zinc-900 p-6 rounded-lg border border-zinc-700">
+              <div className="h-[650px] min-w-[800px] flex justify-center">
                 <React.Suspense fallback={<div className="flex items-center justify-center h-full text-zinc-400">Loading chart...</div>}>
                   <ProtectedRealityScatter
                     data={filteredData}
@@ -872,28 +872,29 @@ const InsightComparisonView: React.FC = () => {
               </div>
             </div>
           ) : (
-            <div className="flex items-center justify-center h-96 text-zinc-400">
+            <div className="flex items-center justify-center h-96 text-zinc-400 bg-zinc-900 p-4 rounded-lg border border-zinc-700">
               {loading ? "Loading data..." : "No data available. Select countries to compare."}
             </div>
           )}
           
-          <div className="flex items-center gap-2 mt-4">
+          <div className="flex items-center gap-3 mt-6 bg-zinc-900 p-4 rounded-lg border border-zinc-700">
             <input 
               type="checkbox" 
               id="worldSwitch"
+              className="w-5 h-5"
               checked={showGlobalContext} 
               onChange={e => setShowGlobalContext(e.target.checked)} 
             />
-            <label htmlFor="worldSwitch" className="text-white text-sm">
+            <label htmlFor="worldSwitch" className="text-white text-md font-medium">
               Show rest of world
             </label>
           </div>
           
-          <div className="mt-4 text-zinc-400 text-sm">
+          <div className="mt-6 text-zinc-300 text-md bg-zinc-900 p-4 rounded-lg border border-zinc-700">
             <p>This chart shows countries with protected area percentages above 15% that have still experienced forest cover loss.</p>
-            <p className="mt-2">Protected area designations don't always translate to actual conservation outcomes.
-               Countries in the red quadrant have lost forest cover despite high protected area percentages.</p>
-            <p className="mt-2 text-blue-300">Click on any country dot to see its detailed forest and protection timeseries.</p>
+            <p className="mt-3">Protected area designations don't always translate to actual conservation outcomes.
+               Countries in the <span className="text-red-400 font-semibold">red quadrant</span> have lost forest cover despite high protected area percentages.</p>
+            <p className="mt-3 text-blue-400 font-medium">👉 Click on any country dot to see its detailed forest and protection timeseries.</p>
           </div>
           
           {/* Country Forest Drawer */}
