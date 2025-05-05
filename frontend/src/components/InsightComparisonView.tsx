@@ -22,6 +22,10 @@ import { scaleLinear, scaleOrdinal } from '@visx/scale';
 import { Group } from '@visx/group';
 import { format } from 'd3-format';
 
+// Lazy load components
+const ProtectedRealityScatter = React.lazy(() => import('./ProtectedRealityScatter'));
+const CountryForestDrawer = React.lazy(() => import('./CountryForestDrawer'));
+
 // Header component for the comparison view
 const ComparisonViewHeader: React.FC<{ 
   countries: string[],
@@ -97,6 +101,8 @@ const InsightComparisonView: React.FC = () => {
   const [showGlobalContext, setShowGlobalContext] = useState<boolean>(false);
   const [countryNames, setCountryNames] = useState<Record<string, string>>({});
   const [narrativeData, setNarrativeData] = useState<Record<string, string>>({});
+  // Declare the state for selected country drawer outside the conditional rendering
+  const [selectedCountryForDrawer, setSelectedCountryForDrawer] = useState<string | null>(null);
 
   // Color palette for countries (unique colors for each)
   const colorScale = scaleOrdinal({
@@ -838,148 +844,66 @@ const InsightComparisonView: React.FC = () => {
             </div>
           </div>
           
-          <div className="h-96">
-            <XYChart
-              height={350}
-              xScale={{ type: 'linear', domain: [0, Math.max(...filteredData.map(d => d.protected_pct)) * 1.1] }}
-              yScale={{ type: 'linear', domain: [Math.min(...filteredData.map(d => d.delta_forest)) * 1.1, 0] }}
-              margin={{ top: 20, right: 40, bottom: 50, left: 60 }}
-            >
-              <AnimatedGrid columns={false} numTicks={5} />
-              <AnimatedAxis 
-                orientation="bottom" 
-                label="Protected Land Area (%)"
-                labelOffset={40}
-                labelProps={{
-                  fill: 'white',
-                  fontSize: 12,
-                  textAnchor: 'middle',
-                }}
-                tickLabelProps={() => ({
-                  fill: 'white',
-                  fontSize: 10,
-                  textAnchor: 'middle',
-                })}
-                numTicks={5}
-              />
-              <AnimatedAxis 
-                orientation="left" 
-                label="Forest Land Change (ha per capita)" 
-                labelOffset={50}
-                labelProps={{
-                  fill: 'white',
-                  fontSize: 12,
-                  textAnchor: 'middle',
-                }}
-                tickLabelProps={() => ({
-                  fill: 'white',
-                  fontSize: 10,
-                  textAnchor: 'end',
-                })}
-                numTicks={5}
-              />
-              
-              {/* Reference line at y=0 */}
-              <Group>
-                <line
-                  x1={0}
-                  x2={Math.max(...filteredData.map(d => d.protected_pct)) * 1.1}
-                  y1={0}
-                  y2={0}
-                  stroke="#666"
-                  strokeWidth={1}
-                  strokeDasharray="4,4"
-                />
-                <text
-                  x={Math.max(...filteredData.map(d => d.protected_pct)) * 0.5}
-                  y={-5}
-                  fill="white"
-                  fontSize={10}
-                  textAnchor="middle"
-                >
-                  No forest change
-                </text>
-              </Group>
-              
-              {/* Points for each country */}
-              <AnimatedGlyphSeries
-                dataKey="countries"
-                data={filteredData}
-                xAccessor={(d) => d.protected_pct}
-                yAccessor={(d) => d.delta_forest}
-                colorAccessor={(d) => showGlobalContext 
-                  ? (d.isSelected ? colorScale(d.iso3) : 'rgba(255,255,255,0.2)')
-                  : colorScale(d.iso3)
-                }
-                sizeAccessor={(d) => showGlobalContext ? (d.isSelected ? 8 : 4) : 8}
-              />
-              
-              {/* Annotations for selected countries */}
-              {!showGlobalContext && filteredData.map((country) => {
-                // Skip invalid countries
-                if (!country || !country.iso3) return null;
-                
-                return (
-                  <Annotation
-                    key={`annotation-${country.iso3}`}
-                    dataKey={`${country.iso3}-label`}
-                    datum={{ x: country.protected_pct, y: country.delta_forest }}
-                    dx={5}
-                    dy={-5}
-                  >
-                    <text
-                      key={`text-${country.iso3}`}
-                      fill={colorScale(country.iso3)}
-                      fontSize={10}
-                      fontWeight="bold"
-                      textAnchor="start"
-                    >
-                      {country.iso3}
-                    </text>
-                  </Annotation>
-                );
-              })}
-              
-              <Tooltip
-                snapTooltipToDatumX
-                snapTooltipToDatumY
-                showVerticalCrosshair
-                showHorizontalCrosshair
-                renderTooltip={({ tooltipData }) => {
-                  if (!tooltipData || !tooltipData.nearestDatum) return null;
-                  const datum = tooltipData.nearestDatum.datum as any;
-                  
-                  return (
-                    <div className="bg-zinc-900 p-3 rounded-lg shadow-xl border border-zinc-700">
-                      <div className="text-white font-bold">
-                        {countryNames[datum.iso3] || datum.iso3}
-                      </div>
-                      <div className="text-zinc-300 text-sm mt-1">
-                        Protected area: {datum.protected_pct.toFixed(1)}%
-                      </div>
-                      <div className="text-zinc-300 text-sm">
-                        Forest change: {datum.delta_forest.toFixed(3)} ha per capita
-                      </div>
-                      <div className="text-zinc-300 text-sm">
-                        Current forest: {datum.forest_land_BiocapPerCap.toFixed(3)} ha per capita
-                      </div>
-                      {datum.delta_forest < 0 && (
-                        <div className="text-red-400 text-sm mt-1">
-                          ⚠️ Net forest loss despite protection
-                        </div>
-                      )}
-                    </div>
-                  );
-                }}
-              />
-            </XYChart>
+          {filteredData.length > 0 ? (
+            <div className="overflow-x-auto">
+              <div className="h-96 min-w-[350px]">
+                <React.Suspense fallback={<div className="flex items-center justify-center h-full text-zinc-400">Loading chart...</div>}>
+                  <ProtectedRealityScatter
+                    data={filteredData}
+                    countries={countries}
+                    showGlobalContext={showGlobalContext}
+                    onDotClick={(iso) => {
+                      setSelectedCountryForDrawer(iso);
+                      
+                      // If country is not in basket, add it (limited to 6 max)
+                      if (!countries.includes(iso) && countries.length < 6) {
+                        const newCountries = [...countries, iso];
+                        navigate({
+                          pathname: '/insight',
+                          search: createSearchParams({
+                            countries: newCountries.join(','),
+                            question: question
+                          }).toString()
+                        });
+                      }
+                    }}
+                  />
+                </React.Suspense>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center justify-center h-96 text-zinc-400">
+              {loading ? "Loading data..." : "No data available. Select countries to compare."}
+            </div>
+          )}
+          
+          <div className="flex items-center gap-2 mt-4">
+            <input 
+              type="checkbox" 
+              id="worldSwitch"
+              checked={showGlobalContext} 
+              onChange={e => setShowGlobalContext(e.target.checked)} 
+            />
+            <label htmlFor="worldSwitch" className="text-white text-sm">
+              Show rest of world
+            </label>
           </div>
           
           <div className="mt-4 text-zinc-400 text-sm">
             <p>This chart shows countries with protected area percentages above 15% that have still experienced forest cover loss.</p>
             <p className="mt-2">Protected area designations don't always translate to actual conservation outcomes.
-               Countries below the dotted line have lost forest cover despite high protected area percentages.</p>
+               Countries in the red quadrant have lost forest cover despite high protected area percentages.</p>
+            <p className="mt-2 text-blue-300">Click on any country dot to see its detailed forest and protection timeseries.</p>
           </div>
+          
+          {/* Country Forest Drawer */}
+          <React.Suspense fallback={<div />}>
+            <CountryForestDrawer
+              isOpen={selectedCountryForDrawer !== null}
+              onClose={() => setSelectedCountryForDrawer(null)}
+              country={selectedCountryForDrawer}
+            />
+          </React.Suspense>
         </div>
       );
     }

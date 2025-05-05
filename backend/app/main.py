@@ -12,10 +12,12 @@ PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 ARTEFACTS = os.getenv("ARTEFACTS_DIR", os.path.join(PROJECT_ROOT, "artefacts"))
 FORECASTS = os.getenv("FORECASTS_DIR", os.path.join(PROJECT_ROOT, "forecasts"))
 INSIGHTS = os.path.join(PROJECT_ROOT, "insights")
+DATA_WORK = os.path.join(PROJECT_ROOT, "data_work")
 
 print(f"Using artefacts directory: {ARTEFACTS}")
 print(f"Using forecasts directory: {FORECASTS}")
 print(f"Using insights directory: {INSIGHTS}")
+print(f"Using data_work directory: {DATA_WORK}")
 
 # Ensure directories exist
 pathlib.Path(ARTEFACTS).mkdir(exist_ok=True)
@@ -110,4 +112,28 @@ def scores(iso:str):
         return clean_for_json(result_df).to_dict("records")
     except Exception as e:
         print(f"Error loading model scores for {iso}: {str(e)}")
+        return []
+
+@app.get("/timeseries/{iso}")        # → timeseries for protected area reality chart
+def get_ts(iso: str):
+    try:
+        # Load features_full.csv which contains all timeseries data
+        features_path = os.path.join(DATA_WORK, "features_full.csv")
+        features_df = _csv(features_path)
+        
+        # Filter for the requested ISO code
+        country_df = features_df[features_df.iso3 == iso]
+        
+        # Select only the relevant columns: year, protected_pct, forest_land_BiocapPerCap
+        if 'protected_pct' in country_df.columns and 'forest_land_BiocapPerCap' in country_df.columns:
+            result_df = country_df[['year', 'protected_pct', 'forest_land_BiocapPerCap']]
+            # Make sure values are sorted by year
+            result_df = result_df.sort_values('year')
+            # Clean and return the data
+            return clean_for_json(result_df).to_dict("records")
+        else:
+            print(f"Missing required columns for {iso}. Available columns: {country_df.columns.tolist()}")
+            return []
+    except Exception as e:
+        print(f"Error fetching timeseries data for {iso}: {str(e)}")
         return []
