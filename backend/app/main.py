@@ -138,6 +138,57 @@ def get_ts(iso: str):
         print(f"Error fetching timeseries data for {iso}: {str(e)}")
         return []
 
+@app.get("/eco-balance/{iso}")       # → ecological balance timeseries
+def get_eco_balance(iso: str):
+    """
+    Get ecological balance (reserve/deficit) timeseries for a country
+    
+    Returns:
+        - year: Year of the data point
+        - eco_balance_percap: Per-capita ecological balance (biocapacity - footprint)
+        - eco_balance_total: Total ecological balance in global hectares
+        - total_BiocapPerCap: Biocapacity per capita
+        - total_EFConsPerCap: Ecological footprint consumption per capita
+    """
+    try:
+        # Load features_full.csv which contains all timeseries data
+        features_path = os.path.join(DATA_WORK, "features_full.csv")
+        features_df = _csv(features_path)
+        
+        # Filter for the requested ISO code
+        country_df = features_df[features_df.iso3 == iso.upper()]
+        
+        if country_df.empty:
+            raise HTTPException(404, f"No data found for country {iso}")
+        
+        # Select ecological balance columns
+        eco_cols = ['year']
+        optional_cols = [
+            'eco_balance_percap', 'eco_balance_total',
+            'total_BiocapPerCap', 'total_EFConsPerCap',
+            'total_BiocapTotGHA', 'total_EFConsTotGHA'
+        ]
+        
+        # Only include columns that exist
+        for col in optional_cols:
+            if col in country_df.columns:
+                eco_cols.append(col)
+        
+        if len(eco_cols) == 1:  # Only year column
+            raise HTTPException(404, f"Ecological balance data not available for {iso}. Run the pipeline to generate features.")
+        
+        result_df = country_df[eco_cols].sort_values('year')
+        
+        # Clean and return the data
+        return clean_for_json(result_df).to_dict("records")
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error fetching ecological balance data for {iso}: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(500, str(e))
+
 # ═══════════════════════════════════════════════════════════
 # Random Forest Enhanced Endpoints
 # ═══════════════════════════════════════════════════════════

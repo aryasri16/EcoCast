@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import CompareDrawer from "./CompareDrawer";
+import EcoBalanceDrawer from "./EcoBalanceDrawer";
 import { CountryData } from "../types/api";
 
 interface Props { 
@@ -9,9 +10,10 @@ interface Props {
 }
 
 // Country Chip component for each country in the snapshot panel
-const CountryChip = ({ countryData, onRemove }: { 
+const CountryChip = ({ countryData, onRemove, onViewEcoBalance }: { 
   countryData: CountryData, 
-  onRemove: () => void 
+  onRemove: () => void,
+  onViewEcoBalance: () => void
 }) => {
   // Get cluster color based on cluster number (following the same color scheme as Globe.tsx)
   const getClusterColor = (cluster?: number | null) => {
@@ -106,6 +108,16 @@ const CountryChip = ({ countryData, onRemove }: {
             </span>
           </div>
         </div>
+        
+        {/* Action Buttons */}
+        <div className="mt-3 flex gap-2">
+          <button
+            onClick={onViewEcoBalance}
+            className="flex-1 bg-green-600 hover:bg-green-700 text-white text-xs py-1.5 px-2 rounded-md transition-colors"
+          >
+            View Ecological Balance
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -116,6 +128,8 @@ export default function CountryInfoPanel({ basket, setBasket }: Props) {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [isCompareDrawerOpen, setIsCompareDrawerOpen] = useState<boolean>(false);
+  const [isEcoBalanceDrawerOpen, setIsEcoBalanceDrawerOpen] = useState<boolean>(false);
+  const [selectedCountryForEcoBalance, setSelectedCountryForEcoBalance] = useState<string | null>(null);
   const [dataSource, setDataSource] = useState<string>("backend");
 
   // Fetch country data for the countries in the basket
@@ -318,7 +332,11 @@ export default function CountryInfoPanel({ basket, setBasket }: Props) {
             <CountryChip 
               key={country.iso3} 
               countryData={country} 
-              onRemove={() => handleRemoveCountry(country.iso3)} 
+              onRemove={() => handleRemoveCountry(country.iso3)}
+              onViewEcoBalance={() => {
+                setSelectedCountryForEcoBalance(country.iso3);
+                setIsEcoBalanceDrawerOpen(true);
+              }}
             />
           ))}
         </div>
@@ -339,6 +357,16 @@ export default function CountryInfoPanel({ basket, setBasket }: Props) {
         isOpen={isCompareDrawerOpen} 
         onClose={() => setIsCompareDrawerOpen(false)} 
         basket={basket}
+      />
+      
+      {/* Ecological Balance Drawer */}
+      <EcoBalanceDrawer
+        isOpen={isEcoBalanceDrawerOpen}
+        onClose={() => {
+          setIsEcoBalanceDrawerOpen(false);
+          setSelectedCountryForEcoBalance(null);
+        }}
+        country={selectedCountryForEcoBalance}
       />
     </div>
   );
